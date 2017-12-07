@@ -33,6 +33,9 @@ def start_websocket
     EM::WebSocket.start(:host => '0.0.0.0', :port => '3001') do |ws|
       ws.onopen do |handshake|
         @clients << ws
+        p 'hello'
+        p ws
+        p handshake
         ws.send "Connected to #{handshake.path}"
       end
 
