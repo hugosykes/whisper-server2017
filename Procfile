@@ -1,1 +1,1 @@
-web: bundle exec app/app.rb
+web: bundle exec config.ru -p $PORT
