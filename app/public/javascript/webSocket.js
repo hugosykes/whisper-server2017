@@ -5,7 +5,7 @@ $(document).ready(function() {
   }
 
   var socket, host;
-  host = "ws://whisper-server2017.herokuapp.com:3001";
+  host = "ws://whisper-server2017.herokuapp.com/";
 
   function connect() {
     try {
