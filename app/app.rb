@@ -3,50 +3,53 @@ require 'sinatra/base'
 require 'em-websocket'
 require(File.expand_path('lib/ruby/json_handler', File.dirname(__FILE__)))
 
-EventMachine.run do
+class MessageServer < Sinatra::Base
+  json_handler = JSON_handler.new()
 
-  class MessageServer < Sinatra::Base
-    json_handler = JSON_handler.new()
-
-    get '/' do
-      erb :index
-    end
-
-    get '/messages/new' do
-      erb :'messages/new'
-    end
-
-    post '/messages' do
-      json_handler.accept(params[:json_form_input])
-      redirect '/messages/confirmation'
-    end
-
-    get '/messages/confirmation' do
-      json_handler.confirmation
-    end
+  get '/' do
+    start_websocket
+    erb :index
   end
 
-  @clients = []
+  get '/messages/new' do
+    erb :'messages/new'
+  end
 
-  EM::WebSocket.start(:host => '0.0.0.0', :port => '3001') do |ws|
-    ws.onopen do |handshake|
-      @clients << ws
-      ws.send "Connected to #{handshake.path}"
-    end
+  post '/messages' do
+    json_handler.accept(params[:json_form_input])
+    redirect '/messages/confirmation'
+  end
 
-    ws.onclose do
-      ws.send "Closed"
-      @clients.delete ws
-    end
+  get '/messages/confirmation' do
+    json_handler.confirmation
+  end
+end
 
-    ws.onmessage do |msg|
-      EventMachine.stop_event_loop if msg == 'Please stop'
-      puts "Received Message: #{msg}"
-      @clients.each do |socket|
-        socket.send msg
+def start_websocket
+  EventMachine.run do
+
+    @clients = []
+
+    EM::WebSocket.start(:host => '0.0.0.0', :port => '3001') do |ws|
+      ws.onopen do |handshake|
+        @clients << ws
+        ws.send "Connected to #{handshake.path}"
+      end
+
+      ws.onclose do
+        ws.send "Closed"
+        @clients.delete ws
+      end
+
+      ws.onmessage do |msg|
+        EventMachine.stop_event_loop if msg == 'Please stop'
+        puts "Received Message: #{msg}"
+        @clients.each do |socket|
+          socket.send msg
+        end
       end
     end
-  end
 
-  ENV['RACK_ENV'] == 'test' ? EventMachine.stop_event_loop : (MessageServer.run! :port => 9292)
+    ENV['RACK_ENV'] == 'test' ? EventMachine.stop_event_loop : (MessageServer.run! :port => 9292)
+  end
 end
