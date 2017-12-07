@@ -5,9 +5,9 @@ require(File.expand_path('lib/ruby/json_handler', File.dirname(__FILE__)))
 
 class MessageServer < Sinatra::Base
   json_handler = JSON_handler.new()
-
+  start_websocket
+  
   get '/' do
-    start_websocket
     erb :index
   end
 
